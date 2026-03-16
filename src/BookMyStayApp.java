@@ -27,12 +27,7 @@ class RoomInventory {
     }
 }
 
-/**
- * Entry point demonstrating centralized room inventory management.
- * @author Student
- * @version 3.1
- */
-public class UseCase3RoomInventory {
+public class BookMyStayApp {
 
     public static void main(String[] args) {
 
