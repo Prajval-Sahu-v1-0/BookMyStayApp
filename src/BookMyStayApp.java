@@ -1,5 +1,48 @@
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
+
+class Reservation {
+
+    private String guestName;
+    private String roomType;
+
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+}
+
+class BookingRequestQueue {
+
+    private Queue<Reservation> queue;
+
+    public BookingRequestQueue() {
+        queue = new LinkedList<>();
+    }
+
+    public void addRequest(Reservation r) {
+        queue.offer(r);
+    }
+
+    public Reservation getNextRequest() {
+        return queue.poll();
+    }
+
+    public boolean hasRequests() {
+        return !queue.isEmpty();
+    }
+}
 
 class RoomInventory {
 
@@ -16,13 +59,50 @@ class RoomInventory {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    public void updateAvailability(String roomType, int count) {
-        inventory.put(roomType, count);
+    public void decrement(String roomType) {
+        int current = inventory.getOrDefault(roomType, 0);
+        if (current > 0) {
+            inventory.put(roomType, current - 1);
+        }
+    }
+}
+
+class BookingService {
+
+    private RoomInventory inventory;
+    private HashMap<String, Set<String>> allocatedRooms;
+    private int idCounter = 1;
+
+    public BookingService(RoomInventory inventory) {
+        this.inventory = inventory;
+        allocatedRooms = new HashMap<>();
     }
 
-    public void displayInventory() {
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " Available: " + entry.getValue());
+    private String generateRoomId(String roomType) {
+        String id = roomType.replace(" ", "").substring(0, 2).toUpperCase() + idCounter;
+        idCounter++;
+        return id;
+    }
+
+    public void processReservation(Reservation reservation) {
+
+        String type = reservation.getRoomType();
+        int available = inventory.getAvailability(type);
+
+        if (available <= 0) {
+            System.out.println("Reservation failed for " + reservation.getGuestName() + " (No rooms available)");
+            return;
+        }
+
+        String roomId = generateRoomId(type);
+
+        allocatedRooms.putIfAbsent(type, new HashSet<>());
+        Set<String> rooms = allocatedRooms.get(type);
+
+        if (!rooms.contains(roomId)) {
+            rooms.add(roomId);
+            inventory.decrement(type);
+            System.out.println("Reservation confirmed for " + reservation.getGuestName() + " | Room ID: " + roomId);
         }
     }
 }
@@ -32,19 +112,22 @@ public class BookMyStayApp {
     public static void main(String[] args) {
 
         RoomInventory inventory = new RoomInventory();
+        BookingRequestQueue queue = new BookingRequestQueue();
+
+        queue.addRequest(new Reservation("Alice", "Single Room"));
+        queue.addRequest(new Reservation("Bob", "Double Room"));
+        queue.addRequest(new Reservation("Charlie", "Suite Room"));
+        queue.addRequest(new Reservation("David", "Single Room"));
+
+        BookingService service = new BookingService(inventory);
 
         System.out.println("Book My Stay App");
-        System.out.println("Version: 3.1");
+        System.out.println("Version: 6.1");
+        System.out.println();
 
-        System.out.println("\nCurrent Room Inventory:");
-        inventory.displayInventory();
-
-        System.out.println("\nUpdating availability...");
-
-        inventory.updateAvailability("Single Room", 4);
-        inventory.updateAvailability("Double Room", 2);
-
-        System.out.println("\nUpdated Room Inventory:");
-        inventory.displayInventory();
+        while (queue.hasRequests()) {
+            Reservation r = queue.getNextRequest();
+            service.processReservation(r);
+        }
     }
 }
