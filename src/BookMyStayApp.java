@@ -1,110 +1,44 @@
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
-abstract class Room {
+class Reservation {
 
-    protected String type;
-    protected int beds;
-    protected double size;
-    protected double price;
+    private String guestName;
+    private String roomType;
 
-    public Room(String type, int beds, double size, double price) {
-        this.type = type;
-        this.beds = beds;
-        this.size = size;
-        this.price = price;
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 
-    public String getType() {
-        return type;
+    public String getGuestName() {
+        return guestName;
     }
 
-    public double getPrice() {
-        return price;
+    public String getRoomType() {
+        return roomType;
     }
 
-    public void displayDetails() {
-        System.out.println("Room Type: " + type);
-        System.out.println("Beds: " + beds);
-        System.out.println("Size: " + size + " sq.ft");
-        System.out.println("Price: " + price);
+    public void display() {
+        System.out.println("Guest: " + guestName + " | Requested Room: " + roomType);
     }
 }
 
-/**
- * Single room implementation.
- * @author Student
- * @version 2.0
- */
-class SingleRoom extends Room {
-    public SingleRoom() {
-        super("Single Room", 1, 200, 1500);
-    }
-}
+class BookingRequestQueue {
 
-/**
- * Double room implementation.
- * @author Student
- * @version 2.0
- */
-class DoubleRoom extends Room {
-    public DoubleRoom() {
-        super("Double Room", 2, 350, 2500);
-    }
-}
+    private Queue<Reservation> requestQueue;
 
-/**
- * Suite room implementation.
- * @author Student
- * @version 2.0
- */
-class SuiteRoom extends Room {
-    public SuiteRoom() {
-        super("Suite Room", 3, 600, 5000);
-    }
-}
-
-/**
- * Centralized inventory management using HashMap.
- * @author Student
- * @version 3.0
- */
-class RoomInventory {
-
-    private HashMap<String, Integer> inventory;
-
-    public RoomInventory() {
-        inventory = new HashMap<>();
-        inventory.put("Single Room", 5);
-        inventory.put("Double Room", 3);
-        inventory.put("Suite Room", 2);
+    public BookingRequestQueue() {
+        requestQueue = new LinkedList<>();
     }
 
-    public int getAvailability(String roomType) {
-        return inventory.getOrDefault(roomType, 0);
-    }
-}
-
-/**
- * Provides read-only search functionality for guests.
- * @author Student
- * @version 4.0
- */
-class RoomSearchService {
-
-    private RoomInventory inventory;
-
-    public RoomSearchService(RoomInventory inventory) {
-        this.inventory = inventory;
+    public void addRequest(Reservation reservation) {
+        requestQueue.offer(reservation);
     }
 
-    public void searchAvailableRooms(Room[] rooms) {
-        for (Room room : rooms) {
-            int available = inventory.getAvailability(room.getType());
-            if (available > 0) {
-                room.displayDetails();
-                System.out.println("Available Rooms: " + available);
-                System.out.println();
-            }
+    public void displayQueue() {
+        for (Reservation r : requestQueue) {
+            r.display();
         }
     }
 }
@@ -113,22 +47,17 @@ public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        RoomInventory inventory = new RoomInventory();
+        BookingRequestQueue queue = new BookingRequestQueue();
 
-        Room[] rooms = {
-                new SingleRoom(),
-                new DoubleRoom(),
-                new SuiteRoom()
-        };
-
-        RoomSearchService searchService = new RoomSearchService(inventory);
+        queue.addRequest(new Reservation("Alice", "Single Room"));
+        queue.addRequest(new Reservation("Bob", "Double Room"));
+        queue.addRequest(new Reservation("Charlie", "Suite Room"));
+        queue.addRequest(new Reservation("David", "Single Room"));
 
         System.out.println("Book My Stay App");
-        System.out.println("Version: 4.1");
+        System.out.println("Version: 5.1");
         System.out.println();
-        System.out.println("Available Rooms:");
-        System.out.println();
-
-        searchService.searchAvailableRooms(rooms);
+        System.out.println("Current Booking Request Queue:");
+        queue.displayQueue();
     }
 }
